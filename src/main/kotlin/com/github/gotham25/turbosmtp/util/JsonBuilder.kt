@@ -1,4 +1,4 @@
-package com.turbosmtp.util
+package com.github.gotham25.turbosmtp.util
 
 import java.lang.StringBuilder
 

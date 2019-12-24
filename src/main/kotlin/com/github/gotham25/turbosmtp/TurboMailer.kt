@@ -1,10 +1,10 @@
-package com.turbosmtp.mailer
+package com.github.gotham25.turbosmtp
 
 import khttp.get
 import khttp.post
 import khttp.responses.Response
 import org.json.JSONObject
-import com.turbosmtp.util.JsonBuilder
+import com.github.gotham25.turbosmtp.util.JsonBuilder
 
 class TurboMailer private constructor(
 	private val authUser: String? = null,

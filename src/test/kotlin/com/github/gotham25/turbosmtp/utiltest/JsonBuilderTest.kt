@@ -1,8 +1,8 @@
-package com.serversmtp.turboapi.utiltest
+package com.github.gotham25.turboapi.utiltest
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import com.turbosmtp.util.JsonBuilder
+import com.github.gotham25.turbosmtp.util.JsonBuilder
 
 /**
  * This is a test class for JsonBuilder class.

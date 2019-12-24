@@ -35,7 +35,7 @@ dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
-group = 'com.serversmtp.turboapi'
+group = 'com.github.gotham25.turbosmtp'
 version = project.hasProperty('version') ? project.getProperty('version') : ''
 
 task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
@@ -62,7 +62,7 @@ artifacts {
 publishing {
 	publications {
 		maven(MavenPublication) {
-			groupId 'com.serversmtp.turboapi'
+			groupId 'com.github.gotham25.turbosmtp'
 			artifactId 'TurboSMTP'
 			version project.hasProperty('version') ? project.getProperty('version') : ''
 			
