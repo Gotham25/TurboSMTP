@@ -35,6 +35,9 @@ dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
+group = 'com.serversmtp.turboapi'
+version = project.hasProperty('version') ? project.getProperty('version') : ''
+
 task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
     outputFormat = 'javadoc'
     outputDirectory = 'build/dokkaJavadoc'
