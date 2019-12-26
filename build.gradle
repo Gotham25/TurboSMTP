@@ -8,11 +8,17 @@ plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin on the JVM.
     id 'org.jetbrains.kotlin.jvm' version '1.3.31'
     
+    //Apply eclipse plugin to generate Eclipse IDE files(.classpath & .project)
     id 'eclipse'
     
+    //Apply dokka plugin to generate Java like documentation for the kotlin classes
     id 'org.jetbrains.dokka' version '0.10.0'
     
+    //Apply maven publish plugin to publish the generated artifacts to maven repo
     id 'maven-publish'
+    
+    //Apply signing plugin to sign the generated artifacts
+    id 'signing'
 }
 
 repositories {
@@ -35,8 +41,12 @@ dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
-group = 'com.github.gotham25.turbosmtp'
+group = 'com.github.gotham25'
 version = project.hasProperty('version') ? project.getProperty('version') : ''
+
+
+
+/********For generating artifacts, sources and javadoc**********/
 
 task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
     outputFormat = 'javadoc'
@@ -53,22 +63,109 @@ task dokkaJavaDocJar(type: Jar, dependsOn: dokkaJavadoc) {
 	from dokkaJavadoc.outputDirectory
 }
 
-
 artifacts {
-	archives sourcesJar
-	archives dokkaJavaDocJar
+	archives sourcesJar, dokkaJavaDocJar
 }
+
+
+/********For signing generated artifacts**********/
+
+task signPom(type: Sign) {
+	sign project.file('build/publications/maven/pom-default.xml')
+	outputs.upToDateWhen { false }
+}
+
+signing {
+	sign configurations.archives
+}
+
+
+
+/********For publishing to maven repo**********/
 
 publishing {
 	publications {
+	
 		maven(MavenPublication) {
-			groupId 'com.github.gotham25.turbosmtp'
+			groupId 'com.github.gotham25'
 			artifactId 'TurboSMTP'
 			version project.hasProperty('version') ? project.getProperty('version') : ''
-			
 			from components.java
+			
+			project.tasks.withType(Sign) {
+			
+				signatures.all {
+					def type = it.type
+					if (it.file.name.endsWith('xml.asc')) {
+						type = 'pom.asc'
+					} else if (it.file.name.contains('-sources') || it.file.name.contains('-javadoc')) {
+						type = 'jar.asc'
+					}
+					artifact source: it.file, classifier: it.classifier ?: null, extension: type
+				}
+			}
+			
+			pom.withXml {
+				asNode().children().last() + {
+					resolveStrategy = Closure.DELEGATE_FIRST
+					name 'TurboSMTP'
+					description 'Kotlin library to send mail using Turbo SMTP API'
+					url 'https://github.com/Gotham25/TurboSMTP'
+					scm {
+						url 'https://github.com/Gotham25/TurboSMTP.git'
+					}
+					licenses {
+						license {
+							name 'The Apache Software License, Version 2.0'
+							url 'http://www.apache.org/license/LICENSE-2.0.txt'
+							distribution 'repo'
+						}
+					}
+					developers {
+						developer {
+							id 'gotham25'
+							name 'Gowtham Alaguraj'
+							email 'gowtham25alaguraj@gmail.com'
+						}
+					}
+				}
+			}
+			
 			artifact(sourcesJar)
 			artifact(dokkaJavaDocJar)
 		}
+	}
+	repositories {
+		maven {
+			name 'Snapshot'
+			url 'https://oss.sonatype.org/content/repositories/snapshots'
+			credentials {
+				username project.hasProperty('ossrhUsername') ? project.getProperty('ossrhUsername') : ''
+				password project.hasProperty('ossrhPassword') ? project.getProperty('ossrhPassword') : ''
+			}
+		}
+		maven {
+			name 'Releases'
+			url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+			credentials {
+				username project.hasProperty('ossrhUsername') ? project.getProperty('ossrhUsername') : ''
+				password project.hasProperty('ossrhPassword') ? project.getProperty('ossrhPassword') : ''
+			}
+		}
+	}
+}
+
+
+/********Link signing task with maven publish tasks**********/
+
+model {
+	tasks.publishMavenPublicationToSnapshotRepository {
+		dependsOn project.tasks.withType(Sign)
+	}
+	tasks.publishMavenPublicationToReleasesRepository {
+		dependsOn project.tasks.withType(Sign)
+	}
+	tasks.signPom {
+		dependsOn tasks.generatePomFileForMavenPublication
 	}
 }
